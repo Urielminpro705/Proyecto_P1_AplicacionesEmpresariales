@@ -144,7 +144,18 @@ def delete_libro(codigo: int = Path(ge = 1, le = 1000)) -> dict:
             return JSONResponse(status_code= 200, content= {"message": "El libro: "+nombre+" se borro con exito"})
     return JSONResponse(status_code= 404, content= {"message": "no se encontro el id: "+ str(codigo)})
             
-
+# Actualizar un libro
+@app.put('/libros/{codigo}', tags=['libros'], response_model = dict, status_code = 200)
+def update_libro(codigo: int = Path(ge = 1, le = 1000), titulo: str=Body(), autor: str=Body(), año: int=Body(), categoria: str=Body(), numPaginas: int=Body()) -> dict:
+    for item in libros:
+        if item["codigo"] == codigo:
+            item["titulo"] = titulo
+            item["autor"] = autor
+            item["año"] = año
+            item["categoria"] = categoria
+            item["numPaginas"] = numPaginas
+            return JSONResponse(status_code=200, content = {"message": "Se actualizó correctamente el libro."})
+    return JSONResponse(status_code = 404, content = {"message": "No se encontró el libro"})
 
 
 # Agregar un libro
