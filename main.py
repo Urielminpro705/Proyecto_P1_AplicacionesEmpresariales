@@ -17,8 +17,7 @@
 
 from fastapi import FastAPI, Body, Path, Query
 from fastapi.responses import HTMLResponse, JSONResponse
-from pydantic import BaseModel, Field
-from typing import Optional, List
+from typing import List
 
 app = FastAPI()
 app.title = "Libreria"
@@ -103,6 +102,11 @@ categorias = [
 def message():
     return HTMLResponse('<h1 style="color:red"> ¡Bienvenido a la libreria! </h1>')
 
+# Mostrar todos los libros
+@app.get('/libros', tags=['libros'], response_model = List[dict], status_code = 200)
+def get_libros() -> List[dict]:
+    return JSONResponse(status_code = 200, content=libros)
+
 # Buscar libro por id
 @app.get('/libros/{codigo}', tags=['libros'], response_model = dict)
 def get_libro(codigo: int = Path(ge = 1, le = 100)) -> dict:
@@ -110,11 +114,6 @@ def get_libro(codigo: int = Path(ge = 1, le = 100)) -> dict:
         if libro["codigo"] == codigo:
             return JSONResponse(status_code = 200, content = libro)
     return JSONResponse(status_code = 404, content = {"message": "No existe este libro"})
-
-# Mostrar todos los libros
-@app.get('/libros', tags=['libros'], response_model = List[dict], status_code = 200)
-def get_libros() -> List[dict]:
-     return JSONResponse(status_code = 200, content=libros)
 
 # Buscar libros por categoria (Revisado por el God del Mewing)
 @app.get('/libros/', tags=['libros'], response_model = List[dict], status_code = 200)
