@@ -116,53 +116,65 @@ def get_libro(codigo: int = Path(ge = 1, le = 100)) -> dict:
 def get_libros() -> List[dict]:
      return JSONResponse(status_code = 200, content=libros)
 
-# Buscar libros por categoria
+# Buscar libros por categoria (Revisado por el God del Mewing)
 @app.get('/libros/', tags=['libros'], response_model = List[dict], status_code = 200)
-def get_libro_by_categoria(categoria: str = Path(min_length = 1, max_lenght = 12)):
+def get_libros_by_categoria(categoria: str):
     arreglo = []
     for libro in libros:
         if libro["categoria"] == categoria:
             arreglo.append(libro)
-            return JSONResponse(status_code = 200, content = arreglo)
-    return JSONResponse(status_code = 404, content= [{"message": "No hay libros con esa categoria"}])
+    
+    if(len(arreglo) > 0):
+        return JSONResponse(status_code = 200, content = arreglo)
+    else:
+        return JSONResponse(status_code = 404, content= [{"message": "No hay libros con la Categoria: "+categoria}])
 
 # Eliminar un libro
 # HECHO POR HAZIEL DEV (EL DIOS DEL MEWING):
 @app.delete('/libros/{codigo}', tags=['libros'], response_model = dict,  status_code= 200)
 def delete_libro(codigo: int = Path(ge = 1, le = 1000)) -> dict:
+    nombre = ""
     for item in libros:
         if item["codigo"] == codigo:
+            nombre = item['titulo']
             libros.remove(item)
             for cat in categorias:
                 if cat["nombre"] == item["categoria"]:
                     cat["libros"] -= 1 
-            return JSONResponse(status_code= 200, content= {"message": "El libro se borro con exito"})
+            return JSONResponse(status_code= 200, content= {"message": "El libro: "+nombre+" se borro con exito"})
     return JSONResponse(status_code= 404, content= {"message": "no se encontro el id: "+ str(codigo)})
             
+
+
 
 # Agregar un libro
 # (TAMBIEN HECHO POR EL DIOS DEL MEWING)       
 @app.post('/libros/', tags=['libros'], response_model= dict, status_code=200)
 def create_libro(nombre: str = Body(), autor: str = Body(), año: int = Body(), categoria: str = Body(), numPaginas: int = Body())->dict:
+    exists = False
+    #//? Aqui empieza el ciclo for, donde se verifica que exista la categoria y asignar el id
     for cat in categorias:
-        if cat["nombre"] == categoria:
+        if cat['nombre'] == categoria:
+            exists = True
+            cat["libros"] += 1 
             if len(libros) > 0:
                 ultimo = libros[-1]
                 cod = ultimo["codigo"]
             else:
-                cod = 0
-            libros.append({
-                "codigo": (cod + 1),
-                "nombre": nombre,
-                "autor": autor,
-                "año": año,
-                "categoria": categoria,
-                "numPaginas": numPaginas
-            })
-            cat["libros"] += 1 
-            return JSONResponse(status_code= 200, content={"message": "El libro: "+nombre+" se registro con exito! con id " + str(cod + 1)})
-        else:
-            return JSONResponse(status_code= 409, content = {"message": "No se encontro la categoria: "+categoria})
+                cod = 0     
+    #//? Aqui termina el ciclo for
+    if exists == True:
+        libros.append({
+            "codigo": (cod + 1),
+            "nombre": nombre,
+            "autor": autor,
+            "año": año,
+            "categoria": categoria,
+            "numPaginas": numPaginas
+        })
+        return JSONResponse(status_code= 200, content={"message": "El libro: "+nombre+" se registro con exito! con id " + str(cod + 1)})
+    else:
+        return JSONResponse(status_code= 409, content = {"message": "No se encontro la categoria: "+categoria})
 
 #------------------------------------------Categorias---------------------------------------#
         
@@ -173,7 +185,7 @@ def get_categorias() -> List[dict]:
 
 # Buscar categoria por id
 @app.get('/categorias/{id}', tags=['categorias'], response_model = dict, status_code = 200)
-def get_categoria_by_categoria(id: int = Path(ge = 1, le = 1000)) -> dict:
+def get_categoria_by_id(id: int = Path(ge = 1, le = 1000)) -> dict:
     for item in categorias:
         if item['id'] == id :
             return JSONResponse(status_code = 200, content = item)
@@ -198,19 +210,20 @@ def create_categoria(nombre: str = Query(min_length = 3, max_length = 30)) -> di
     })
     return JSONResponse(status_code = 200, content= {"message":"La categoria se creo correctamente con id " + str(id)})
 
-# Borrar categoria
+# Borrar categoria (Hecho por el dios del MEWING)
 @app.delete('/categorias/{id}', tags=['categorias'], response_model= dict, status_code=200)
 def delete_cat(id:int = Path(ge = 1, le = 1000)) -> dict:
+    name = ""
     for cat in categorias:
         if(cat["id"] == id):
             if(cat["libros"] == 0):
+                name = cat['nombre']
                 categorias.remove(cat)
-                return JSONResponse(status_code=200, content={"message": "La categoria se borro con exito 👍"})
+                return JSONResponse(status_code=200, content={"message": "La categoria: "+name+" se borro con exito 👍"})
             else:
                 return JSONResponse(status_code=409, content={"message":"No se puede borrar una categoria que tenga libros dentro de ella"})
     return JSONResponse(status_code=404, content={"message": "No se encontro la categoria con el id: "+str(id)})
         
-
 # Actualizar categoria
 @app.put('/categorias/{id}', tags=['categorias'], response_model = dict, status_code = 200)
 def update_categoria(id: int = Path(ge = 1, le = 1000) , nombre: str = Body()) -> dict:
@@ -220,5 +233,5 @@ def update_categoria(id: int = Path(ge = 1, le = 1000) , nombre: str = Body()) -
                 if libro["categoria"] == item["nombre"]:
                     libro["categoria"] = nombre
             item["nombre"] = nombre
-            return JSONResponse(status_code = 200 ,content = {"message": "Se actualizo correctamente la categoria"})
-    return JSONResponse(status_code = 404, content = {"mesage": "La categoria que quiere actualiza no existe"})
+            return JSONResponse(status_code = 200 ,content = {"message": "Se actualizo correctamente la categoria: "+nombre+" 👍"})
+    return JSONResponse(status_code = 404, content = {"mesage": "La categoria: "+nombre+" no existe 😔"})
