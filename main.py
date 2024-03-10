@@ -117,7 +117,7 @@ def get_libro(codigo: int = Path(ge = 1, le = 100)) -> dict:
 
 # Buscar libros por categoria (Revisado por el God del Mewing)
 @app.get('/libros/', tags=['libros'], response_model = List[dict], status_code = 200)
-def get_libros_by_categoria(categoria: str):
+def get_libros_by_categoria(categoria: str = Query(min_length = 3, max_length = 30)) -> List[dict]:
     arreglo = []
     for libro in libros:
         if libro["categoria"] == categoria:
