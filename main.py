@@ -55,45 +55,9 @@ app.version = "0.1"
 #             }
 #         }
 
-libros = [
-    {
-        "codigo": 1,
-        "titulo":"Planet of The Apes",
-        "autor":"Pierre Boulle",
-        "año": 1963,
-        "categoria": "Sci-fi",
-        "numPaginas": 272 
-    },
-    {
-        "codigo": 2,
-        "titulo":"Scott Pilgrim vs The World",
-        "autor":"Bryan Lee O'Malley",
-        "año": 2005,
-        "categoria": "Comic",
-        "numPaginas": 224 
-    },
-    {
-        "codigo": 3,
-        "titulo":"Dune",
-        "autor":"Frank Herbert",
-        "año": 1965,
-        "categoria": "Sci-fi",
-        "numPaginas": 896 
-    }
-]
+libros = []
 
-categorias = [
-    {
-        "id": 1,
-        "nombre": "Sci-fi",
-        "libros": 2
-    },
-    {   
-        "id": 2,
-        "nombre": "Comic",
-        "libros": 1
-    }
-]
+categorias = []
 
 
 # ---------------------------------------------Libros---------------------------------------------#
@@ -214,7 +178,7 @@ def create_categoria(nombre: str = Query(min_length = 3, max_length = 30)) -> di
         ultimo = categorias[-1]
         id = ultimo["id"] + 1
     for item in categorias :
-        if item["nombre"] == nombre:
+        if item["id"] == nombre:
             return JSONResponse(content= {"message":"La categoria ya existe"})
     categorias.append({
         "id": id,
