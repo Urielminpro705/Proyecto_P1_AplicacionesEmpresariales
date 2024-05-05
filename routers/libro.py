@@ -3,12 +3,15 @@ from pydantic import BaseModel, Field
 from typing import Optional, List
 from fastapi import APIRouter, Body, Depends, Path, Query
 from middlewares.jwt_bearer import JWTBearer
+from config.database import Session
+from models.libro import Libro as LibroModel
+from fastapi.encoders import jsonable_encoder
 
 libro_router = APIRouter()
 libros = []
 
 class Libro(BaseModel):
-    codigo: Optional[int] = None
+    id: Optional[int] = None
     titulo: str = Field(min_length = 1, max_length = 40)
     autor: str  = Field(min_length = 1, max_length = 30)
     año: int = Field(le=2024)
@@ -28,17 +31,20 @@ class Libro(BaseModel):
         }
 
 # Mostrar todos los libros
-@libro_router.get('/libros', tags=['libros'], response_model = List[dict], status_code = 200, dependencies=[Depends(JWTBearer())])
-def get_libros() -> List[dict]:
-    return JSONResponse(status_code = 200, content=libros)
+@libro_router.get('/libros', tags=['libros'], response_model = List[Libro], status_code = 200, dependencies=[Depends(JWTBearer())])
+def get_libros() -> List[Libro]:
+    db = Session()
+    result = db.query(LibroModel).all()
+    return JSONResponse(status_code=200, content=jsonable_encoder(result))
 
 # Buscar libro por id
-@libro_router.get('/libros/{codigo}', tags=['libros'], response_model = dict, dependencies=[Depends(JWTBearer())])
-def get_libro(codigo: int = Path(ge = 1, le = 100)) -> dict:
-    for libro in libros:
-        if libro["codigo"] == codigo:
-            return JSONResponse(status_code = 200, content = libro)
-    return JSONResponse(status_code = 404, content = {"message": "No existe este libro"})
+@libro_router.get('/libros/{codigo}', tags=['libros'], response_model = Libro, dependencies=[Depends(JWTBearer())])
+def get_libro(id: int = Path(ge = 1)) -> Libro:
+    db = Session()
+    result = db.query(LibroModel).filter(LibroModel.id == id).first()
+    if not result:
+        return JSONResponse(status_code = 404, content={'message': "No encontrado"})
+    return JSONResponse(status_code=200, content=jsonable_encoder(result))
 
 # Buscar libros por categoria (Revisado por el God del Mewing)
 @libro_router.get('/libros/', tags=['libros'], response_model = List[dict], status_code = 200, dependencies=[Depends(JWTBearer())])
