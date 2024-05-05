@@ -42,6 +42,7 @@ def get_categoria_by_id(id: int = Path(ge = 0)) -> Categoria:
 @categoria_router.post('/categorias/', tags=['categorias'], response_model = dict, status_code = 200)
 def create_categoria(categoria:Categoria) -> dict:
     db = Session()
+    result = db.query(CategoriaModel).filter()
     new_categoria = CategoriaModel(nombre=categoria.nombre)
     db.add(new_categoria)
     db.commit()
@@ -49,15 +50,15 @@ def create_categoria(categoria:Categoria) -> dict:
 
 # Borrar categoria (Hecho por el dios del MEWING HAZIELDEV))
 @categoria_router.delete('/categorias/{id}', tags=['categorias'], response_model= dict, status_code=200)
-def delete_cat(id:int = Path(ge = 1, le = 1000)) -> dict:
+def delete_cat(id:int = Path(ge = 1)) -> dict:
     db = Session()
     result = db.query(CategoriaModel).filter(CategoriaModel.id == id).first()
     if not result:
-        return JSONResponse(status_code= 404, content = {"message":"No se encontro la categoria con el id: ("+id+") :c"})
+        return JSONResponse(status_code= 404, content = {"message":"No se encontro la categoria con el id: ("+str(id)+") :c"})
     libros = db.query(LibroModel).filter(LibroModel.categoriaId == id).all()
-    if not libros:
+    if libros:
         librosCount = len(libros)
-        return JSONResponse(status_code=404, content= {"message":"No se puede borrar porque hay ("+librosCount+") libros en esta categoria"})
+        return JSONResponse(status_code=404, content= {"message":"No se puede borrar porque hay ("+str(librosCount)+") libros en esta categoria"})
     db.delete()
     db.commit()
     return JSONResponse(status_code= 200, content={"message":"Se borro la categoria ("+result.nombre+")"})

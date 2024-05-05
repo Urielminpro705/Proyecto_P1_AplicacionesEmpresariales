@@ -16,7 +16,7 @@ class Libro(BaseModel):
     titulo: str = Field(min_length = 1, max_length = 40)
     autor: str  = Field(min_length = 1, max_length = 30)
     año: int = Field(le=2024)
-    categoria: str = Field(min_length = 3, max_length = 20)
+    categoria: str = Field(min_length=1, max_length=30)
     numPaginas: int = Field(ge = 1, le = 3000)
 
     class Config:
@@ -25,7 +25,7 @@ class Libro(BaseModel):
                 "titulo": "Mi libro",
                 "autor":"Pepe",
                 "año": 2024,
-                "categoria": "Sci-fi",
+                "categoria": "Sci-Fi",
                 "numPaginas": 99
             }
         }
@@ -48,21 +48,24 @@ def get_libro(id: int = Path(ge = 1)) -> Libro:
 
 # Buscar libros por categoria (Revisado por el God del Mewing)
 @libro_router.get('/libros/', tags=['libros'], response_model = List[Libro], status_code = 200, dependencies=[Depends(JWTBearer())])
-def get_libros_by_categoria(categoria: str = Query(min_length = 3, max_length = 30)) -> List[Libro]:
+def get_libros_by_categoria(categoria: str = Query(min_length = 1, max_length = 30)) -> List[Libro]:
     db = Session()
     result = db.query(LibroModel).join(LibroModel.categoria).filter(CategoriaModel.nombre == categoria).all()
     return JSONResponse(status_code = 200, content=jsonable_encoder(result))
 
 # Agregar un libro
 # (TAMBIEN HECHO POR EL DIOS DEL MEWING)  revivan la grasa :v (livliv)   
-@libro_router.post('/libros/', tags=['libros'], response_model= dict, status_code=200, dependencies=[Depends(JWTBearer())])
+@libro_router.post('/libros/', tags=['libros'], response_model= dict, status_code=200)
 def create_libro(libro: Libro)->dict:
     db = Session()
     # Verificar si la categoría existe
     categoria = db.query(CategoriaModel).filter(CategoriaModel.nombre == libro.categoria).first()
     if not categoria:
         return JSONResponse(status_code = 404, content={"message": "La categoría no existe."})
-    new_libro = LibroModel(**libro.model_dump(), categoriaId = categoria.id)
+    libro2 = libro.model_dump()
+    del libro2["categoria"]
+    libro2["categoriaId"] = categoria.id
+    new_libro = LibroModel(**libro2)
     db.add(new_libro)
     db.commit()
     return JSONResponse(status_code= 200, content={"message": "El libro: "+ libro.titulo +" se registro con exito!"})
@@ -92,7 +95,8 @@ def update_libro(id: int, libro:Libro) -> dict:
     result.titulo = libro.titulo
     result.autor = libro.autor
     result.año = libro.año
-    result.categoria = libro.categoria
+    categoria = db.query(CategoriaModel).filter(CategoriaModel.nombre == libro.categoria).first()
+    result.categoriaId = categoria.id
     result.numPaginas = libro.numPaginas
     db.commit()
     return JSONResponse(status_code=200, content = {"message": "Se actualizó correctamente el libro."})
