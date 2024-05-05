@@ -21,11 +21,13 @@ from routers.libro import libro_router
 from routers.categoria import categoria_router
 from config.database import Base, engine
 from routers.user import user_router
+from middlewares.error_handler import ErrorHandler
 
 app = FastAPI()
 app.title = "Libreria"
 app.version = "0.1"
 
+app.add_middleware(ErrorHandler)
 app.include_router(user_router)
 app.include_router(libro_router)
 app.include_router(categoria_router)
