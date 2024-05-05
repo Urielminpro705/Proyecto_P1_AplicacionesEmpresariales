@@ -67,13 +67,13 @@ def delete_cat(id:int = Path(ge = 1, le = 1000)) -> dict:
     return JSONResponse(status_code=404, content={"message": "No se encontro la categoria con el id: "+str(id)})
         
 # Actualizar categoria
-@categoria_router.put('/categorias/{id}', tags=['categorias'], response_model = dict, status_code = 200)
-def update_categoria(id: int = Path(ge = 1, le = 1000) , nombre: str = Body()) -> dict:
-    for item in categorias:
-        if item["id"] == id:
-            for libro in libros:
-                if libro["categoria"] == item["nombre"]:
-                    libro["categoria"] = nombre
-            item["nombre"] = nombre
-            return JSONResponse(status_code = 200 ,content = {"message": "Se actualizo correctamente la categoria: "+nombre+" 👍"})
-    return JSONResponse(status_code = 404, content = {"mesage": "La categoria: "+nombre+" no existe 😔"})
+# @categoria_router.put('/categorias/{id}', tags=['categorias'], response_model = dict, status_code = 200)
+# def update_categoria(id: int = Path(ge = 1, le = 1000) , nombre: str = Body()) -> dict:
+#     for item in categorias:
+#         if item["id"] == id:
+#             for libro in libros:
+#                 if libro["categoria"] == item["nombre"]:
+#                     libro["categoria"] = nombre
+#             item["nombre"] = nombre
+#             return JSONResponse(status_code = 200 ,content = {"message": "Se actualizo correctamente la categoria: "+nombre+" 👍"})
+#     return JSONResponse(status_code = 404, content = {"mesage": "La categoria: "+nombre+" no existe 😔"})

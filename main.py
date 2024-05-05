@@ -20,11 +20,13 @@ from fastapi.responses import HTMLResponse
 from routers.libro import libro_router
 from routers.categoria import categoria_router
 from config.database import Base, engine
+from routers.user import user_router
 
 app = FastAPI()
 app.title = "Libreria"
 app.version = "0.1"
 
+app.include_router(user_router)
 app.include_router(libro_router)
 app.include_router(categoria_router)
 
