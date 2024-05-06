@@ -9,7 +9,6 @@ from models.categoria import Categoria as CategoriaModel
 from fastapi.encoders import jsonable_encoder
 
 libro_router = APIRouter()
-libros = []
 
 class Libro(BaseModel):
     id: Optional[int] = None
@@ -30,28 +29,52 @@ class Libro(BaseModel):
             }
         }
 
+def agregarNombreCategoria(result):
+    libros = []
+    for libro, nombreCategoria in result:
+        libros.append({
+            "id": libro.id,
+            "titulo": libro.titulo,
+            "autor": libro.autor,
+            "año": libro.año,
+            "categoria": nombreCategoria,
+            "numPaginas": libro.numPaginas
+        })
+    return libros
+
 # Mostrar todos los libros
-@libro_router.get('/libros', tags=['libros'], response_model = List[Libro], status_code = 200, dependencies=[Depends(JWTBearer())])
+@libro_router.get('/libros', tags=['libros'], response_model = List[Libro], status_code = 200)
 def get_libros() -> List[Libro]:
     db = Session()
-    result = db.query(LibroModel).all()
-    return JSONResponse(status_code=200, content=jsonable_encoder(result))
+    result = db.query(LibroModel, CategoriaModel.nombre).join(CategoriaModel).all()
+    if not result:
+        return JSONResponse(status_code = 404, content={'message': "No se encontraron libros"})
+    libros = agregarNombreCategoria(result)
+    return JSONResponse(status_code=200, content=libros)
 
 # Buscar libro por id
-@libro_router.get('/libros/{codigo}', tags=['libros'], response_model = Libro, dependencies=[Depends(JWTBearer())])
+@libro_router.get('/libros/{id}', tags=['libros'], response_model = Libro)
 def get_libro(id: int = Path(ge = 1)) -> Libro:
     db = Session()
-    result = db.query(LibroModel).filter(LibroModel.id == id).first()
+    result = db.query(LibroModel, CategoriaModel.nombre).join(LibroModel.categoria)\
+                .filter(LibroModel.id == id).first()
     if not result:
         return JSONResponse(status_code = 404, content={'message': "Libro no encontrado"})
-    return JSONResponse(status_code=200, content=jsonable_encoder(result))
+    libros = agregarNombreCategoria([result])
+    return JSONResponse(status_code=200, content=libros)
 
 # Buscar libros por categoria (Revisado por el God del Mewing)
-@libro_router.get('/libros/', tags=['libros'], response_model = List[Libro], status_code = 200, dependencies=[Depends(JWTBearer())])
+@libro_router.get('/libros/', tags=['libros'], response_model = List[Libro], status_code = 200)
 def get_libros_by_categoria(categoria: str = Query(min_length = 1, max_length = 30)) -> List[Libro]:
     db = Session()
-    result = db.query(LibroModel).join(LibroModel.categoria).filter(CategoriaModel.nombre == categoria).all()
-    return JSONResponse(status_code = 200, content=jsonable_encoder(result))
+    result = db.query(LibroModel, CategoriaModel.nombre)\
+            .join(CategoriaModel)\
+            .filter(CategoriaModel.nombre == categoria)\
+            .all()
+    if not result:
+        return JSONResponse(status_code = 404, content={'message': "No se encontraron libros"})
+    libros = agregarNombreCategoria(result)
+    return JSONResponse(status_code=200, content=libros)
 
 # Agregar un libro
 # (TAMBIEN HECHO POR EL DIOS DEL MEWING)  revivan la grasa :v (livliv)   

@@ -10,8 +10,6 @@ from config.database import Session
 
 categoria_router = APIRouter()
 
-categorias = []
-
 class Categoria(BaseModel):
     id: Optional[int] = None
     nombre: str = Field(min_length=1, max_length=30)
@@ -24,14 +22,14 @@ class Categoria(BaseModel):
         }
 
 # Mostrar todas las categorias
-@categoria_router.get('/categorias', tags=['categorias'], response_model = List[Categoria], status_code = 200, dependencies=[Depends(JWTBearer())])
+@categoria_router.get('/categorias', tags=['categorias'], response_model = List[Categoria], status_code = 200)
 def get_categorias() -> List[Categoria]:
     db = Session()
     result = db.query(CategoriaModel).all()
     return JSONResponse(status_code=200, content=jsonable_encoder(result))
 
 # Buscar categoria por id
-@categoria_router.get('/categorias/{id}', tags=['categorias'], response_model = Categoria, status_code = 200, dependencies=[Depends(JWTBearer)])
+@categoria_router.get('/categorias/{id}', tags=['categorias'], response_model = Categoria, status_code = 200)
 def get_categoria_by_id(id: int = Path(ge = 0)) -> Categoria:
     db = Session()
     result = db.query(CategoriaModel).filter(CategoriaModel.id == id).first()
@@ -42,7 +40,9 @@ def get_categoria_by_id(id: int = Path(ge = 0)) -> Categoria:
 @categoria_router.post('/categorias/', tags=['categorias'], response_model = dict, status_code = 200)
 def create_categoria(categoria:Categoria) -> dict:
     db = Session()
-    result = db.query(CategoriaModel).filter()
+    result = db.query(CategoriaModel).filter(CategoriaModel.nombre == categoria.nombre).first()
+    if result:
+        return JSONResponse(status_code = 404, content={'message': "Ya existe esta categoria"})
     new_categoria = CategoriaModel(nombre=categoria.nombre)
     db.add(new_categoria)
     db.commit()
