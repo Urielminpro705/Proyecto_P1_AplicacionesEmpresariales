@@ -43,7 +43,7 @@ def agregarNombreCategoria(result):
     return libros
 
 # Mostrar todos los libros
-@libro_router.get('/libros', tags=['libros'], response_model = List[Libro], status_code = 200)
+@libro_router.get('/libros', tags=['libros'], response_model = List[Libro], status_code = 200, dependencies=[Depends(JWTBearer())])
 def get_libros() -> List[Libro]:
     db = Session()
     result = db.query(LibroModel, CategoriaModel.nombre).join(CategoriaModel).all()
@@ -53,7 +53,7 @@ def get_libros() -> List[Libro]:
     return JSONResponse(status_code=200, content=libros)
 
 # Buscar libro por id
-@libro_router.get('/libros/{id}', tags=['libros'], response_model = Libro)
+@libro_router.get('/libros/{id}', tags=['libros'], response_model = Libro, dependencies=[Depends(JWTBearer())])
 def get_libro(id: int = Path(ge = 1)) -> Libro:
     db = Session()
     result = db.query(LibroModel, CategoriaModel.nombre).join(LibroModel.categoria)\
@@ -64,7 +64,7 @@ def get_libro(id: int = Path(ge = 1)) -> Libro:
     return JSONResponse(status_code=200, content=libros)
 
 # Buscar libros por categoria (Revisado por el God del Mewing)
-@libro_router.get('/libros/', tags=['libros'], response_model = List[Libro], status_code = 200)
+@libro_router.get('/libros/', tags=['libros'], response_model = List[Libro], status_code = 200, dependencies=[Depends(JWTBearer())])
 def get_libros_by_categoria(categoria: str = Query(min_length = 1, max_length = 30)) -> List[Libro]:
     db = Session()
     result = db.query(LibroModel, CategoriaModel.nombre)\
@@ -78,7 +78,7 @@ def get_libros_by_categoria(categoria: str = Query(min_length = 1, max_length = 
 
 # Agregar un libro
 # (TAMBIEN HECHO POR EL DIOS DEL MEWING)  revivan la grasa :v (livliv)   
-@libro_router.post('/libros/', tags=['libros'], response_model= dict, status_code=200)
+@libro_router.post('/libros/', tags=['libros'], response_model= dict, status_code=200, dependencies=[Depends(JWTBearer())])
 def create_libro(libro: Libro)->dict:
     db = Session()
     # Verificar si la categoría existe
@@ -96,7 +96,7 @@ def create_libro(libro: Libro)->dict:
 # Eliminar un libro
 # HECHO POR HAZIEL DEV (EL DIOS DEL MEWING)
 # Editado por livers (skibidi mewing sigma digital circus chamba fortnite)
-@libro_router.delete('/libros/{id}', tags=['libros'], response_model = dict, status_code= 200)
+@libro_router.delete('/libros/{id}', tags=['libros'], response_model = dict, status_code= 200, dependencies=[Depends(JWTBearer())])
 def delete_libro(id: int = Path(ge = 1)) -> dict:
     db = Session()
     result = db.query(LibroModel).filter(LibroModel.id==id).first()
@@ -109,7 +109,7 @@ def delete_libro(id: int = Path(ge = 1)) -> dict:
             
 # Actualizar un libro
 # livliv (¿eeeeeeees confuso verdad? sin embargo, skibidi mewing sigma está mal, todo el globo de texto te lo hace saber. te notas chad, con pensamientos en decadencia. un sentimiento de que el prime no volverá a ser lo mismo.)
-@libro_router.put('/libros/{id}', tags=['libros'], response_model = dict, status_code = 200)
+@libro_router.put('/libros/{id}', tags=['libros'], response_model = dict, status_code = 200, dependencies=[Depends(JWTBearer())])
 def update_libro(id: int, libro:Libro) -> dict:
     db = Session()
     result = db.query(LibroModel).filter(LibroModel.id==id).first()
