@@ -24,7 +24,7 @@ class Libro(BaseModel):
                 "titulo": "Mi libro",
                 "autor":"Pepe",
                 "año": 2024,
-                "categoria": "Sci-Fi",
+                "categoria": "Sci-fi",
                 "numPaginas": 99
             }
         }
@@ -96,8 +96,8 @@ def create_libro(libro: Libro)->dict:
 # Eliminar un libro
 # HECHO POR HAZIEL DEV (EL DIOS DEL MEWING)
 # Editado por livers (skibidi mewing sigma digital circus chamba fortnite)
-@libro_router.delete('/libros/{codigo}', tags=['libros'], response_model = dict, status_code= 200, dependencies=[Depends(JWTBearer())])
-def delete_libro(id: int = Path(ge = 0)) -> dict:
+@libro_router.delete('/libros/{id}', tags=['libros'], response_model = dict, status_code= 200)
+def delete_libro(id: int = Path(ge = 1)) -> dict:
     db = Session()
     result = db.query(LibroModel).filter(LibroModel.id==id).first()
     if not result:
@@ -109,16 +109,18 @@ def delete_libro(id: int = Path(ge = 0)) -> dict:
             
 # Actualizar un libro
 # livliv (¿eeeeeeees confuso verdad? sin embargo, skibidi mewing sigma está mal, todo el globo de texto te lo hace saber. te notas chad, con pensamientos en decadencia. un sentimiento de que el prime no volverá a ser lo mismo.)
-@libro_router.put('/libros/{codigo}', tags=['libros'], response_model = dict, status_code = 200, dependencies=[Depends(JWTBearer())])
+@libro_router.put('/libros/{id}', tags=['libros'], response_model = dict, status_code = 200)
 def update_libro(id: int, libro:Libro) -> dict:
     db = Session()
     result = db.query(LibroModel).filter(LibroModel.id==id).first()
     if not result:
         return JSONResponse(status_code = 404, content = {"message": "No se encontró el libro."})
+    categoria = db.query(CategoriaModel).filter(CategoriaModel.nombre == libro.categoria).first()
+    if not categoria:
+        return JSONResponse(status_code = 404, content = {"message": "No se encontró la categoria"})
     result.titulo = libro.titulo
     result.autor = libro.autor
     result.año = libro.año
-    categoria = db.query(CategoriaModel).filter(CategoriaModel.nombre == libro.categoria).first()
     result.categoriaId = categoria.id
     result.numPaginas = libro.numPaginas
     db.commit()
